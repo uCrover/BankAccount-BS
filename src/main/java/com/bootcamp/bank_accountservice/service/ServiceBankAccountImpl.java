@@ -1,5 +1,6 @@
 package com.bootcamp.bank_accountservice.service;
 
+import com.bootcamp.bank_accountservice.model.dto.Credit;
 import com.bootcamp.bank_accountservice.model.dto.CreditCard;
 import com.bootcamp.bank_accountservice.model.dto.Customer;
 import com.bootcamp.bank_accountservice.model.entity.BankAccount;
@@ -9,15 +10,21 @@ import com.bootcamp.bank_accountservice.utils.ApplicationProperties;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
+
 @Service
 @RequiredArgsConstructor
 public class ServiceBankAccountImpl implements ServiceBankAccount{
+
+    private final Logger log= LoggerFactory.getLogger(ServiceBankAccountImpl.class);
 
     private final IBanckAccountRepository repository;
 
@@ -43,12 +50,29 @@ public class ServiceBankAccountImpl implements ServiceBankAccount{
     public Mono<BankAccount> save(BankAccount bankAccount) {
 
         String typeClient="", subTypeClient="";
+        String numDoc=bankAccount.getNumDoc();
+        Mono<Customer> customerMono=findCustomerNumDoc(numDoc);
+        Mono<Object> creditLapsedCustomer=customerMono.map(p->findCreditLapsed(p.getNroDocument()));
 
-        Mono<Customer> customerMono=findCustomerNumDoc(bankAccount.getNumDoc());
 
-        /*customerMono.flatMap(c -> {
-            typeClient=c.getType();
-        });*/
+       /* customerMono.hasElement()
+                        .map*/
+
+        //para clientes empresariales
+        customerMono.filter(p->p.getType().equals("E"))
+                    .map(p->findCreditLapsed(p.getNroDocument()));
+                    //.switchIfEmpty(Mono.empty())
+                    //.hasElement()
+                //.switchIfEmpty();
+
+        //para clientes personales
+
+        //verificar que no tiene alguna deuda vencida
+        //findCreditLapsed(numDoc).subscribeWith()
+
+        //
+
+
 
 /*
     tipoCuenta
@@ -187,4 +211,29 @@ public class ServiceBankAccountImpl implements ServiceBankAccount{
     public Mono<CreditCard> findCreditCardCustomer(String numDoc) {
         return null;
     }
+
+    @Override
+    public Mono<Credit> findCreditLapsed(String numDoc) {
+        this.webClient=WebClient.builder().baseUrl(this.properties.getURLCreditService()).build();
+
+        //recpger créditos por número de DNI de CreditService
+        Flux<Credit> credits=this.webClient
+                .get()
+                .uri("/numDoc/{id}",numDoc)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToFlux(Credit.class);
+
+        //recoger al menos 1 o vacío
+        Mono<Credit> ra=credits.filter(p-> (p.getDateLapsed().isAfter(LocalDate.now())))
+                .take(1)
+                .singleOrEmpty();
+                //.subscribe(x->log.info(x.toString()))
+
+        Mono<Boolean> value=ra.hasElement();
+
+        return ra;
+    }
+
+
 }

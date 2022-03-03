@@ -1,9 +1,12 @@
+server:
+  port: 8081
 spring:
+  data:
+    mongodb:
+      uri: mongodb+srv://crover:bdCo-v95.@cluster0.nawut.mongodb.net/db_bank_account?retryWrites=true&w=majority
   application:
     name: bank_account-service
     #configuración del config-server
-  cloud:
-    config:
-      uri: http://localhost:8090
-      username: nttdata
-      password: nttd4t4
+  #cloud:
+    #config:
+      #uri: http://localhost:8090

@@ -13,4 +13,7 @@ public class ApplicationProperties {
 
     @Value("${config.base.customer-service}")
     private String URLCustomerService;
+
+    @Value("${config.base.credit-service}")
+    private String URLCreditService;
 }

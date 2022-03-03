@@ -1,6 +1,7 @@
 package com.bootcamp.bank_accountservice.service;
 
 
+import com.bootcamp.bank_accountservice.model.dto.Credit;
 import com.bootcamp.bank_accountservice.model.dto.CreditCard;
 import com.bootcamp.bank_accountservice.model.dto.Customer;
 import com.bootcamp.bank_accountservice.model.entity.BankAccount;
@@ -22,4 +23,6 @@ public interface ServiceBankAccount {
     public Mono<Customer> findCustomerNumDoc(String numDoc);
 
     public Mono<CreditCard> findCreditCardCustomer (String numDoc);
+
+    public Mono<Credit> findCreditLapsed(String numDoc);
 }
